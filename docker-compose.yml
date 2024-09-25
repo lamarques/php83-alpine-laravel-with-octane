@@ -1,0 +1,42 @@
+services:
+    app:
+        build:
+            context: .
+            dockerfile: Dockerfile
+            args:
+                APP_ENV: '${APP_ENV:-dev}'
+        container_name: 'app.application.dev'
+        volumes:
+            - './:/app'
+        ports:
+            - '8088:8000'
+        networks:
+            - bubble
+        environment:
+            - APP_ENV=${APP_ENV:-dev}
+        env_file: .env
+    mysql:
+        image: 'mysql/mysql-server:8.0'
+        container_name: 'db.application.dev'
+        ports:
+            - '${FORWARD_DB_PORT:-3306}:3306'
+        environment:
+            MYSQL_ROOT_PASSWORD: '${DB_PASSWORD}'
+            MYSQL_ROOT_HOST: '%'
+            MYSQL_DATABASE: '${DB_DATABASE}'
+            MYSQL_USER: '${DB_USERNAME}'
+            MYSQL_PASSWORD: '${DB_PASSWORD}'
+        env_file: .env
+        networks:
+            - bubble
+        healthcheck:
+            test:
+                - CMD
+                - mysqladmin
+                - ping
+                - '-p${DB_PASSWORD}'
+            retries: 3
+            timeout: 5s
+networks:
+    bubble:
+        driver: bridge
